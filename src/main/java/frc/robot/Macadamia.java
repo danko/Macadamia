@@ -12,12 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Encoder;
+import frc.robot.Ultrasonic2537;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -34,12 +34,29 @@ public class Macadamia extends TimedRobot {
 
   private Talon leftTalon, rightTalon;
   private DifferentialDrive drive;
-  private Ultrasonic2537 frontUltrasonic, rearUltrasonic;
-  private XboxController xbox;
-  private Timer timer;
-  private Encoder leftEnc, rightEnc;
+  private final int LEFT_TALON = 0;
+  private final int RIGHT_TALON = 1;
 
-  private int stopLeft, stopRight;
+  private Ultrasonic2537 frontUltrasonic, rearUltrasonic;
+  private final int FRONT_PING = 8;
+  private final int FRONT_ECHO = 9;
+  private final int REAR_PING = 4;
+  private final int REAR_ECHO = 5;
+  private final double safeDistance = 15.0;
+
+  private XboxController xbox;
+
+  private Timer timer;
+
+  private Encoder leftEnc, rightEnc;
+  private final int L_ENCODER_A = 0;
+  private final int L_ENCODER_B = 1;
+  private final int R_ENCODER_A = 2;
+  private final int R_ENCODER_B = 3;
+
+  private double leftSpeed, rightSpeed; // speed to run motors
+  private int stopLeft, stopRight;      // When robot reached its destination
+
   private final int X_BUTTON = 0;
   private final int Y_BUTTON = 1;
   private final int B_BUTTON = 2;
@@ -47,7 +64,8 @@ public class Macadamia extends TimedRobot {
   private final int NOBUTTON = -1;
   private int buttonPressed = NOBUTTON;
 
-public class MyThread extends Thread {
+
+/*public class MyThread extends Thread {
 
   public void run(){
     System.out.println("MyThread");
@@ -64,7 +82,7 @@ public class MyThread extends Thread {
     public void driveLeft(){
     driveEncoder(-666,666, -0.47,0.5);
   }
-}
+} */
 
   /**
    * This function is run when the robot is first started up and should be
@@ -77,15 +95,13 @@ public class MyThread extends Thread {
     SmartDashboard.putData("Auto choices", m_chooser);
 
     //Configure Drive
-    leftTalon = new Talon(0);
-    rightTalon = new Talon(1);
+    leftTalon = new Talon(LEFT_TALON);
+    rightTalon = new Talon(RIGHT_TALON);
     drive = new DifferentialDrive(leftTalon, rightTalon);
 
     //Configure Ultrasonic sensors on front and rear
-
-      frontUltrasonic = new Ultrasonic2537(8, 9); // ping, echo
-    
-      rearUltrasonic = new Ultrasonic2537(4, 5); // ping, echo
+      frontUltrasonic = new Ultrasonic2537(FRONT_PING, FRONT_ECHO); // ping, echo
+      rearUltrasonic = new Ultrasonic2537(REAR_PING, REAR_ECHO); // ping, echo
       rearUltrasonic.setAutomaticMode(true);
       
 
@@ -98,8 +114,8 @@ public class MyThread extends Thread {
     //Instantiate timer
     timer = new Timer();
 
-    leftEnc = new Encoder (0,1);
-    rightEnc = new Encoder (2,3, true);
+    leftEnc = new Encoder (L_ENCODER_A, L_ENCODER_B);
+    rightEnc = new Encoder (R_ENCODER_A, R_ENCODER_B, true);
     leftEnc.reset();
     rightEnc.reset();
   }
@@ -171,85 +187,53 @@ public void teleopPeriodic() {
   // safety stop if too close to an obstacle
 
   if (xbox.getYButtonPressed()) {
-    // reset encoders so counts start at 0
     buttonPressed = Y_BUTTON;
+
+    // reset encoders so counts start at 0
     leftEnc.reset();
     rightEnc.reset();
-    // start motors going
-    drive.tankDrive(0.45,0.5);
+
+    // set motor speed to go straight forward
+    leftSpeed = 0.45;
+    rightSpeed = 0.5;
+
     // set point we want to stop at
     stopLeft = 2000; stopRight = 2000;
   }
-
-  // if we've set a point we want to stop at
-  if (((stopLeft > 0) || (stopRight > 0)) && buttonPressed == Y_BUTTON) {
-    // Read current encoder settings
-     Integer curLeft = leftEnc.getRaw();
-     Integer curRight = rightEnc.getRaw();
-     // If we've reached our stop point
-     if ((curLeft >= stopLeft) || (curRight >= stopRight)) {
-        // stop motors
-        drive.tankDrive(0.0, 0.0);
-        // clear the stop point so we don't do this again
-        // until button is pushed again
-        stopLeft = stopRight = 0;
-        buttonPressed = NOBUTTON;
-     } else{
-       drive.tankDrive(0.45,0.5);
-     }
-  } else {
-    // manual (joystick) control
-
-    double leftSpeed  = -0.5*xbox.getY(Hand.kLeft);
-    double rightSpeed = -0.5*xbox.getY(Hand.kRight);
-    
-    if (safetyStop(15.0, frontUltrasonic) && (leftSpeed > 0.0) && (rightSpeed > 0.0)) {
-      // System.out.println("front stop");
-        drive.stopMotor();
-    } else if (safetyStop(15.0, rearUltrasonic) && (leftSpeed < 0.0) && (rightSpeed < 0.0)) {
-        drive.stopMotor();
-        // System.out.println("back stop");
-    } else {
-      // otherwise, set motors according to joysticks
-        drive.tankDrive(leftSpeed, rightSpeed);
-    }
-  }
-  if (xbox.getBButtonPressed()) {
+  else if (xbox.getBButtonPressed()) {
     buttonPressed = B_BUTTON;
+
+    // reset encoders so counts start at 0
     leftEnc.reset();
     rightEnc.reset();
-    drive.tankDrive(0.5,-0.47);
+
+    // set motor speed to go straight forward
+    leftSpeed = 0.5;
+    rightSpeed = -0.47;
+
+    // set point we want to stop at
     stopLeft = 2000; stopRight = 2000;
   }
-
-  if (((stopLeft > 0) || (stopRight > 0)) && buttonPressed == B_BUTTON) {
-     Integer curLeft = leftEnc.getRaw();
-     Integer curRight = rightEnc.getRaw();
-     if ((curLeft >= stopLeft) || (curRight >= stopRight)) {
-        drive.tankDrive(0.0, 0.0);
-        stopLeft = stopRight = 0;
-        buttonPressed = NOBUTTON;
-     } else{
-       drive.tankDrive(0.5,-0.47);
-     }
-  } else {
-
-    double leftSpeed  = -0.5*xbox.getY(Hand.kLeft);
-    double rightSpeed = -0.5*xbox.getY(Hand.kRight);
-    
-    if (safetyStop(15.0, frontUltrasonic) && (leftSpeed > 0.0) && (rightSpeed > 0.0)) {
-      // System.out.println("front stop");
-        drive.stopMotor();
-    } else if (safetyStop(15.0, rearUltrasonic) && (leftSpeed < 0.0) && (rightSpeed < 0.0)) {
-        drive.stopMotor();
-        // System.out.println("back stop");
-    } else {
-        drive.tankDrive(leftSpeed, rightSpeed);
-    }
+  else if (stopLeft == 0 && stopRight == 0) { // drive only using joystick
+    joystickDrive();
+  } else {  // drive fixed distance
+    driveEncoder(stopLeft, stopRight, leftSpeed, rightSpeed);
   }
 }
 
+public void joystickDrive() {
+  leftSpeed  = -0.5*xbox.getY(Hand.kLeft);
+  rightSpeed = -0.5*xbox.getY(Hand.kRight);
 
+  if (safetyStop(safeDistance, frontUltrasonic) && (leftSpeed > 0.0) && (rightSpeed > 0.0)) {
+      drive.stopMotor();
+  } else if (safetyStop(safeDistance, rearUltrasonic) && (leftSpeed < 0.0) && (rightSpeed < 0.0)) {
+      drive.stopMotor();
+  } else {
+    // otherwise, set motors according to joysticks
+      drive.tankDrive(leftSpeed, rightSpeed);
+  }
+}
 
 
   /**
@@ -259,15 +243,15 @@ public void teleopPeriodic() {
   public void testPeriodic() {
   }
 
-    // Use  ultrasonic sensor to stop robot
-    // if it gets too close to an obstacle 
-    public boolean safetyStop(double safeDistance, Ultrasonic2537 sensor) {
+
+  // Use  ultrasonic sensor to stop robot
+  // if it gets too close to an obstacle 
+  public boolean safetyStop(double safeDistance, Ultrasonic2537 sensor) {
 
     if (sensor == null)  // no ultrasonic sensor working
       return false;
-    double distance = sensor.getRangeInches();
-   // System.out.println("Distance = " + distance);
 
+    double distance = sensor.getRangeInches();
     if (distance < safeDistance) 
         return true;
     else
@@ -291,12 +275,9 @@ public void driveLeft(){
 void driveEncoder(int leftDistance, int rightDistance, double leftSpeed, double rightSpeed){
   leftEnc.reset();
   rightEnc.reset();
-  while((Math.abs(leftEnc.getRaw()) < Math.abs(leftDistance)) ||
+  if ((Math.abs(leftEnc.getRaw()) < Math.abs(leftDistance)) ||
         (Math.abs(rightEnc.getRaw()) < Math.abs(rightDistance))){
-
-
-          
-          System.out.println("left" + leftEnc.getRaw() + "right" + rightEnc.getRaw());
+          //System.out.println("left" + leftEnc.getRaw() + "right" + rightEnc.getRaw());
           if (Math.abs(leftEnc.getRaw()) >= Math.abs(leftDistance)){
             drive.tankDrive(0.0,rightSpeed * 0.2);
           }
@@ -305,14 +286,11 @@ void driveEncoder(int leftDistance, int rightDistance, double leftSpeed, double 
           }
           else {
             drive.tankDrive(leftSpeed,rightSpeed);
-          }
-  
-  
-  
-  
+          } 
         }
-
-  drive.tankDrive(0.0,0.0);
+  else {
+    drive.tankDrive(0.0,0.0);
+  }
 }
 
 };
