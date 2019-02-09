@@ -186,9 +186,7 @@ public void teleopPeriodic() {
   // Use controller joysticks to set drive speed, but
   // safety stop if too close to an obstacle
 
-  if (xbox.getYButtonPressed()) {
-    buttonPressed = Y_BUTTON;
-
+  if (xbox.getYButtonPressed()) { // drive 2 feet forward
     // reset encoders so counts start at 0
     leftEnc.reset();
     rightEnc.reset();
@@ -200,9 +198,7 @@ public void teleopPeriodic() {
     // set point we want to stop at
     stopLeft = 2000; stopRight = 2000;
   }
-  else if (xbox.getBButtonPressed()) {
-    buttonPressed = B_BUTTON;
-
+  else if (xbox.getBButtonPressed()) {  // turn 90 degrees to right
     // reset encoders so counts start at 0
     leftEnc.reset();
     rightEnc.reset();
@@ -210,6 +206,29 @@ public void teleopPeriodic() {
     // set motor speed to go straight forward
     leftSpeed = 0.5;
     rightSpeed = -0.47;
+
+    // set point we want to stop at
+    stopLeft = 2000; stopRight = 2000;
+  }
+  else if (xbox.getAButtonPressed()) { // drive backward 2 feet
+    // reset encoders so counts start at 0
+    leftEnc.reset();
+    rightEnc.reset();
+
+    // set motor speed to go straight forward
+    leftSpeed = - 0.5;
+    rightSpeed = -0.47;
+
+    // set point we want to stop at
+    stopLeft = 2000; stopRight = 2000;
+  } else if (xbox.getXButtonPressed()) {
+    // reset encoders so counts start at 0
+    leftEnc.reset();
+    rightEnc.reset();
+
+    // set motor speed to go straight forward
+    rightSpeed = 0.5;
+    leftSpeed = -0.47;
 
     // set point we want to stop at
     stopLeft = 2000; stopRight = 2000;
