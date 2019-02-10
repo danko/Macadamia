@@ -150,9 +150,9 @@ public class Macadamia extends TimedRobot {
     double distance = frontUltrasonic.getRangeInches();
 
     if (distance < safeDistance) {
-      drive.tankDrive(-0.2, -0.2);
+      drive.tankDrive(-0.33, -0.33);
     } else if (distance > safeDistance) {
-      drive.tankDrive(0.2, 0.2);
+      drive.tankDrive(0.33, 0.33);
     } else {
       drive.tankDrive(0.0, 0.0);
     }
@@ -201,8 +201,8 @@ public class Macadamia extends TimedRobot {
       rightSpeed = -0.47;
 
       // set point we want to stop at
-      stopLeft = 666;
-      stopRight = -666;
+      stopLeft = 500;
+      stopRight = 500;
     } else if (xbox.getAButtonPressed()) { // drive backward 2 feet when A button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
@@ -225,9 +225,9 @@ public class Macadamia extends TimedRobot {
       leftSpeed = -0.47;
 
       // set point we want to stop at
-      stopLeft = -666;
-      stopRight = 666;
-    } else if (stopLeft == 0 && stopRight == 0) { // default is drive only using joystick
+      stopLeft = 600;
+      stopRight = 600;
+    } else if (stopLeft ==0 && stopRight ==0) {
       joystickDrive();
     } else { // drive fixed distance specified by the button presses
       driveEncoder(stopLeft, stopRight, leftSpeed, rightSpeed);
@@ -275,14 +275,14 @@ public class Macadamia extends TimedRobot {
   public void driveForwardInches(int distance) {
     int distanceTicks = (int) (distance * 1000 / 23.75);
 
-    driveEncoder(distanceTicks, distanceTicks, 0.47, 0.5);
+    driveEncoderInThread(distanceTicks, distanceTicks, 0.47, 0.5);
   }
 
   /**
    * Turn the robot 90 degrees to the left in place.
    */ 
   public void turnRight() {
-    driveEncoder(666, -666, 0.5, -0.47);
+    driveEncoderInThread(666, -666, 0.5, -0.47);
   }
 
   /**
@@ -291,14 +291,14 @@ public class Macadamia extends TimedRobot {
   public void driveBackwardInches(int distance) {
     int distanceTicks = (int) (distance * -1000 / 23.75);
 
-    driveEncoder(distanceTicks, distanceTicks, -0.47, -0.5);
+    driveEncoderInThread(distanceTicks, distanceTicks, -0.47, -0.5);
   }
 
    /**
    * Turn the robot 90 degrees to the right in place.
    */ 
   public void turnLeft() {
-    driveEncoder(-666, 666, -0.47, 0.5);
+    driveEncoderInThread(-666, 666, -0.47, 0.5);
   }
 
   /**
@@ -306,21 +306,39 @@ public class Macadamia extends TimedRobot {
    * Can turn by using negative and positive speed values.
    */
   void driveEncoder(int leftDistance, int rightDistance, double leftSpeed, double rightSpeed) {
-    leftEnc.reset();
-    rightEnc.reset();
     if ((Math.abs(leftEnc.getRaw()) < Math.abs(leftDistance))
         || (Math.abs(rightEnc.getRaw()) < Math.abs(rightDistance))) {
       // System.out.println("left" + leftEnc.getRaw() + "right" + rightEnc.getRaw());
-      if (Math.abs(leftEnc.getRaw()) >= Math.abs(leftDistance)) {
-        drive.tankDrive(0.0, rightSpeed * 0.2);
-      } else if (Math.abs(rightEnc.getRaw()) >= Math.abs(rightDistance)) {
-        drive.tankDrive(leftSpeed * 0.2, 0.0);
-      } else {
+     // if (Math.abs(leftEnc.getRaw()) >= Math.abs(leftDistance)) {
+      //  drive.tankDrive(0.0, rightSpeed * 0.2);
+      //} else if (Math.abs(rightEnc.getRaw()) >= Math.abs(rightDistance)) {
+      //  drive.tankDrive(leftSpeed * 0.2, 0.0);
+      //} else {
         drive.tankDrive(leftSpeed, rightSpeed);
-      }
+      //}
     } else {
       drive.tankDrive(0.0, 0.0);
+      this.stopLeft = 0;
+      this.stopRight = 0;
     }
   }
 
+
+  void driveEncoderInThread(int leftDistance, int rightDistance, double leftSpeed, double rightSpeed) {
+    while ((Math.abs(leftEnc.getRaw()) < Math.abs(leftDistance))
+        || (Math.abs(rightEnc.getRaw()) < Math.abs(rightDistance))) {
+      // System.out.println("left" + leftEnc.getRaw() + "right" + rightEnc.getRaw());
+     // if (Math.abs(leftEnc.getRaw()) >= Math.abs(leftDistance)) {
+      //  drive.tankDrive(0.0, rightSpeed * 0.2);
+      //} else if (Math.abs(rightEnc.getRaw()) >= Math.abs(rightDistance)) {
+      //  drive.tankDrive(leftSpeed * 0.2, 0.0);
+      //} else {
+        drive.tankDrive(leftSpeed, rightSpeed);
+      //}
+    } 
+      drive.tankDrive(0.0, 0.0);
+      //this.stopLeft = 0;
+      //this.stopRight = 0;
+  
+  }
 };
