@@ -176,10 +176,10 @@ public class Macadamia extends TimedRobot {
     // Use controller joysticks to set drive speed, but
     // safety stop if too close to an obstacle
 
-    if (xbox.getStartButtonPressed()) { // go for an autonomous drive
+    if (xbox.getStartButtonPressed()) { // go for an autonomous drive when start button pressed
       DriveAround d = new DriveAround();
       d.start();
-    } else if (xbox.getYButtonPressed()) { // drive 2 feet forward
+    } else if (xbox.getYButtonPressed()) { // drive 2 feet forward when Y button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
       rightEnc.reset();
@@ -191,7 +191,7 @@ public class Macadamia extends TimedRobot {
       // set point we want to stop at
       stopLeft = 1000;
       stopRight = 1000;
-    } else if (xbox.getBButtonPressed()) { // turn 90 degrees to right
+    } else if (xbox.getBButtonPressed()) { // turn 90 degrees to right when B button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
       rightEnc.reset();
@@ -203,7 +203,7 @@ public class Macadamia extends TimedRobot {
       // set point we want to stop at
       stopLeft = 666;
       stopRight = -666;
-    } else if (xbox.getAButtonPressed()) { // drive backward 2 feet
+    } else if (xbox.getAButtonPressed()) { // drive backward 2 feet when A button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
       rightEnc.reset();
@@ -215,7 +215,7 @@ public class Macadamia extends TimedRobot {
       // set point we want to stop at
       stopLeft = 1000;
       stopRight = 1000;
-    } else if (xbox.getXButtonPressed()) { // turn 90 degrees to left
+    } else if (xbox.getXButtonPressed()) { // turn 90 degrees to left when X button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
       rightEnc.reset();
@@ -227,9 +227,9 @@ public class Macadamia extends TimedRobot {
       // set point we want to stop at
       stopLeft = -666;
       stopRight = 666;
-    } else if (stopLeft == 0 && stopRight == 0) { // drive only using joystick
+    } else if (stopLeft == 0 && stopRight == 0) { // default is drive only using joystick
       joystickDrive();
-    } else { // drive fixed distance
+    } else { // drive fixed distance specified by the button presses
       driveEncoder(stopLeft, stopRight, leftSpeed, rightSpeed);
     }
   }
