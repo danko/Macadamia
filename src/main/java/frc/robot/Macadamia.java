@@ -56,19 +56,20 @@ public class Macadamia extends TimedRobot {
 
   private double leftSpeed, rightSpeed; // speed to run motors
   private int stopLeft, stopRight; // When robot reached its destination
+  private boolean startPressed = false;
 
   public class DriveAround extends Thread {
 
     public void run() { // drive in square, all sides 12 inches, then go backward 12 inches
-      driveForwardInches(12);
+      driveForward(4000);
       turnRight();
-      driveForwardInches(12);
+      driveForward(5000);
       turnRight();
-      driveForwardInches(12);
+      driveForward(4000);
       turnRight();
-      driveForwardInches(12);
-      turnLeft();
-      driveBackwardInches(12);
+      driveForward(5000);
+      turnRight();
+      startPressed = false;
     }
   }
 
@@ -144,9 +145,11 @@ public class Macadamia extends TimedRobot {
 
   /**
    * This function is called periodically during autonomous.
+   * The robot tries to stay exactly safeDistance away from an object in front of 
+   * the front ultrasonic sensor. 
    */
   @Override
-  public void autonomousPeriodic() {
+  public void autonomousPeriodic() { 
     double distance = frontUltrasonic.getRangeInches();
 
     if (distance < safeDistance) {
@@ -177,6 +180,7 @@ public class Macadamia extends TimedRobot {
     // safety stop if too close to an obstacle
 
     if (xbox.getStartButtonPressed()) { // go for an autonomous drive when start button pressed
+      startPressed = true;
       DriveAround d = new DriveAround();
       d.start();
     } else if (xbox.getYButtonPressed()) { // drive 2 feet forward when Y button pressed
@@ -197,20 +201,20 @@ public class Macadamia extends TimedRobot {
       rightEnc.reset();
 
       // set motor speed to go straight forward
-      leftSpeed = 0.5;
-      rightSpeed = -0.47;
+      leftSpeed = 0.45;
+      rightSpeed = -0.5;
 
       // set point we want to stop at
-      stopLeft = 500;
-      stopRight = 500;
+      stopLeft = 650;
+      stopRight = 650;
     } else if (xbox.getAButtonPressed()) { // drive backward 2 feet when A button pressed
       // reset encoders so counts start at 0
       leftEnc.reset();
       rightEnc.reset();
 
       // set motor speed to go straight forward
-      leftSpeed = -0.5;
-      rightSpeed = -0.47;
+      leftSpeed = -0.45;
+      rightSpeed = -0.5;
 
       // set point we want to stop at
       stopLeft = 1000;
@@ -221,15 +225,15 @@ public class Macadamia extends TimedRobot {
       rightEnc.reset();
 
       // set motor speed to go straight forward
+      leftSpeed = -0.45;
       rightSpeed = 0.5;
-      leftSpeed = -0.47;
 
       // set point we want to stop at
       stopLeft = 600;
       stopRight = 600;
     } else if (stopLeft ==0 && stopRight ==0) {
       joystickDrive();
-    } else { // drive fixed distance specified by the button presses
+    } else if (!startPressed) { // drive fixed distance specified by the button presses
       driveEncoder(stopLeft, stopRight, leftSpeed, rightSpeed);
     }
   }
@@ -272,33 +276,38 @@ public class Macadamia extends TimedRobot {
      /**
    * Drive forward the specified number of inches. Assume circumfrence of drive wheels is 23.75 inches
    */ 
-  public void driveForwardInches(int distance) {
-    int distanceTicks = (int) (distance * 1000 / 23.75);
-
-    driveEncoderInThread(distanceTicks, distanceTicks, 0.47, 0.5);
+  public void driveForward(int distance) {
+    leftEnc.reset();
+    rightEnc.reset();
+    driveEncoderInThread(distance, distance, 0.47, 0.5);
   }
 
   /**
    * Turn the robot 90 degrees to the left in place.
    */ 
   public void turnRight() {
-    driveEncoderInThread(666, -666, 0.5, -0.47);
+    leftEnc.reset();
+    rightEnc.reset();
+    driveEncoderInThread(250, -250, 0.47, -0.5);
   }
 
   /**
    * Drive backward the specified number of inches. Assume circumfrence of drive wheels is 23.75 inches
    */ 
-  public void driveBackwardInches(int distance) {
-    int distanceTicks = (int) (distance * -1000 / 23.75);
+  public void driveBackward(int distance) {
+    leftEnc.reset();
+    rightEnc.reset();
 
-    driveEncoderInThread(distanceTicks, distanceTicks, -0.47, -0.5);
+    driveEncoderInThread(distance, distance, -0.47, -0.5);
   }
 
    /**
    * Turn the robot 90 degrees to the right in place.
    */ 
   public void turnLeft() {
-    driveEncoderInThread(-666, 666, -0.47, 0.5);
+    leftEnc.reset();
+    rightEnc.reset();
+    driveEncoderInThread(-250, 250, -0.47, 0.5);
   }
 
   /**
