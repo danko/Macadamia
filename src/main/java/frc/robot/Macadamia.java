@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Encoder;
-import frc.robot.Ultrasonic2537;
+import edu.wpi.first.wpilibj.Ultrasonic;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -37,12 +37,12 @@ public class Macadamia extends TimedRobot {
   private final int LEFT_TALON = 0;
   private final int RIGHT_TALON = 1;
 
-  private Ultrasonic2537 frontUltrasonic, rearUltrasonic;
+  private Ultrasonic frontUltrasonic, rearUltrasonic;
   private final int FRONT_PING = 8;
   private final int FRONT_ECHO = 9;
   private final int REAR_PING = 4;
   private final int REAR_ECHO = 5;
-  private final double safeDistance = 15.0;
+  private final double safeDistance = 30.0;
 
   private XboxController xbox;
 
@@ -73,6 +73,21 @@ public class Macadamia extends TimedRobot {
     }
   }
 
+  public class ReadUltrasonic extends Thread {
+    public void run() {
+      //double frontDistane = frontUltrasonic.getRangeInches();
+      // rearDistance = rearUltrasonic.getRangeInches();
+      
+      while(true) {
+      if (safetyStop(safeDistance, frontUltrasonic) && (leftSpeed > 0.0) && (rightSpeed > 0.0)) {
+        drive.stopMotor();
+      } else if (safetyStop(safeDistance, rearUltrasonic) && (leftSpeed < 0.0) && (rightSpeed < 0.0)) {
+        drive.stopMotor();
+      } 
+    }
+    }
+  }
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
@@ -88,9 +103,11 @@ public class Macadamia extends TimedRobot {
     rightTalon = new Talon(RIGHT_TALON);
     drive = new DifferentialDrive(leftTalon, rightTalon);
 
-    // Configure Ultrasonic sensors on front and rear
-    frontUltrasonic = new Ultrasonic2537(FRONT_PING, FRONT_ECHO); // ping, echo
-    rearUltrasonic = new Ultrasonic2537(REAR_PING, REAR_ECHO); // ping, echo
+    // Configure Ultrasonic2537 sensors on front and rear = new Ultrasonic2537(FRONT_PING, FRONT_ECHO); // ping, echo
+    frontUltrasonic = new Ultrasonic(FRONT_PING, FRONT_ECHO); // ping, echo
+
+    rearUltrasonic = new Ultrasonic(REAR_PING, REAR_ECHO); // ping, echo
+
     rearUltrasonic.setAutomaticMode(true);
 
     // Configure Joystick input
@@ -106,6 +123,12 @@ public class Macadamia extends TimedRobot {
     rightEnc = new Encoder(R_ENCODER_A, R_ENCODER_B, true);
     leftEnc.reset();
     rightEnc.reset();
+
+    System.out.println("front " + frontUltrasonic.getRangeInches());
+    System.out.println("rear " + rearUltrasonic.getRangeInches());
+
+   //ReadUltrasonic ru = new ReadUltrasonic();
+    //ru.start();
   }
 
   /**
@@ -146,7 +169,7 @@ public class Macadamia extends TimedRobot {
   /**
    * This function is called periodically during autonomous.
    * The robot tries to stay exactly safeDistance away from an object in front of 
-   * the front ultrasonic sensor. 
+   * the front Ultrasonic2537 sensor. 
    */
   @Override
   public void autonomousPeriodic() { 
@@ -170,6 +193,7 @@ public class Macadamia extends TimedRobot {
       break;
     }
   }
+
 
   /**
    * This function is called periodically during operator control.
@@ -259,11 +283,11 @@ public class Macadamia extends TimedRobot {
   public void testPeriodic() {
   }
 
-  // Use ultrasonic sensor to stop robot
+  // Use Ultrasonic2537 sensor to stop robot
   // if it gets too close to an obstacle
-  public boolean safetyStop(double safeDistance, Ultrasonic2537 sensor) {
+  public boolean safetyStop(double safeDistance, Ultrasonic sensor) {
 
-    if (sensor == null) // no ultrasonic sensor working
+    if (sensor == null) // no Ultrasonic2537 sensor working
       return false;
 
     double distance = sensor.getRangeInches();
