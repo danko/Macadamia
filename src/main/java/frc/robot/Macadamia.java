@@ -40,8 +40,8 @@ public class Macadamia extends TimedRobot {
   private Ultrasonic frontUltrasonic, rearUltrasonic;
   private final int FRONT_PING = 8;
   private final int FRONT_ECHO = 9;
-  private final int REAR_PING = 4;
-  private final int REAR_ECHO = 5;
+  private final int REAR_PING = 5;
+  private final int REAR_ECHO = 4;
   private final double safeDistance = 30.0;
 
   private XboxController xbox;
@@ -126,7 +126,8 @@ public class Macadamia extends TimedRobot {
 
     System.out.println("front " + frontUltrasonic.getRangeInches());
     System.out.println("rear " + rearUltrasonic.getRangeInches());
-
+    System.out.println("front " + frontUltrasonic.getRangeInches());
+    System.out.println("rear " + rearUltrasonic.getRangeInches());
    //ReadUltrasonic ru = new ReadUltrasonic();
     //ru.start();
   }
